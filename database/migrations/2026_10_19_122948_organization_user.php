@@ -11,15 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('organizations_user', function (Blueprint $table) {
-            $table->engine= 'InnoDB';
-            $table->unsignedBigInteger('organization_id');
-            $table->unsignedBigInteger('user_id');
-            $table->string('role');
-            $table->date('joined_at');
+        Schema::create('organization_user', function (Blueprint $table) {
+            $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->enum('role', ['owner', 'member'])->default('member');
+            $table->timestamp('joined_at')->useCurrent();
 
-            $table->foreignId('organization_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->primary(['organization_id', 'user_id']);
         });
     }
 

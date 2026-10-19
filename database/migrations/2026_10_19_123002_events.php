@@ -12,30 +12,27 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('events', function (Blueprint $table) {
-            $table->engine= 'InnoDB';
             $table->id();
-            $table->unsignedBigInteger('organization_id');
-            $table->unsignedBigInteger('sport_id');
-            $table->string('created_by');
+            $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('sport_id')->constrained()->restrictOnDelete();
+            $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
             $table->string('title');
-            $table->text('description');
-            $table->date('starts_at');
-            $table->integer('duration_minute');
+            $table->text('description')->nullable();
+            $table->dateTime('starts_at');
+            $table->unsignedSmallInteger('duration_minutes');
             $table->string('city');
             $table->string('venue');
-            $table->integer('capacity');
+            $table->unsignedSmallInteger('capacity');
             $table->char('public_token', 32)->unique();
-            $table->enum('status');
+            $table->enum('status', ['draft', 'published', 'cancelled'])->default('draft');
             $table->timestamps();
 
-            $table->foreignId('organization_id')->constrained()->onDelete('cascade');
-            $table->foreignId('organization_user')->constrained()->onDelete('cascade');
-            $table->foreignId('sports')->constrained()->onDelete('cascade');
+            $table->index(['status', 'starts_at']);
+            $table->index(['sport_id', 'starts_at']);
+            $table->index(['city', 'starts_at']);
         });
 
-        Schema::table('events', function (Blueprint $table) {
-            \DB::statement('ALTER TABLE events ADD CONSTRAINT chk_capacity CHECK (capacity BETWEEN 2 AND 100)');
-        });
+        DB::statement('ALTER TABLE events ADD CONSTRAINT chk_capacity CHECK (capacity BETWEEN 2 AND 100)');
     }
 
     /**

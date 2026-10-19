@@ -12,13 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('event_participants', function (Blueprint $table) {
-            $table->engine= 'InnoDB';
-            $table->unsignedBigInteger('event_id');
-            $table->unsignedBigInteger('user_id');
-            $table->boolean('status');
-            $table->date('registered_at');
+            $table->foreignId('event_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->enum('status', ['confirmed', 'cancelled'])->default('confirmed');
+            $table->timestamp('registered_at')->useCurrent();
 
-            $table->foreignId('user')->constrained()->onDelete('cascade');
+            $table->primary(['event_id', 'user_id']);
         });
     }
 
