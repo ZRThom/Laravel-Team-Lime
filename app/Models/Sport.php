@@ -6,5 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Sport extends Model
 {
-    //
+    protected $fillable = [
+        'name',
+        'slug', // depend too
+    ];
 }

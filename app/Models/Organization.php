@@ -6,5 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Organization extends Model
 {
-    //
+    protected $fillable = [
+        'name',
+        'slug', // depend
+    ];
 }
