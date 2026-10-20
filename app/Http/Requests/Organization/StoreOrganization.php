@@ -12,7 +12,7 @@ class StoreOrganization extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return $this->user() !== null; // get if user is connected
     }
 
     /**
@@ -23,7 +23,7 @@ class StoreOrganization extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => ['require', 'string', 'max=255'], // name is required, with a string and max character = 255
         ];
     }
 }

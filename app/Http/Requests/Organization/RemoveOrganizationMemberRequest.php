@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Organization;
 
+use App\Models\Organization;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -12,7 +13,9 @@ class RemoveOrganizationMemberRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        $organization = $this->route('organization'); // catch organization in url when route model bind
+        // check if organization owner is link with user id, then valid request
+        return $organization instanceof Organization && this->user() !== null && $organization->users()->where('user.id', $this->user()->id)->wherePivot('role', 'owner')->exists();
     }
 
     /**
@@ -22,8 +25,12 @@ class RemoveOrganizationMemberRequest extends FormRequest
      */
     public function rules(): array
     {
+        $organization = $this->route('organization');
         return [
-            //
+            'user_id' => [
+                'required', 'integer', Rule::exists('organization_user', 'user_id')->where('organization_id', $organization->id)->where('role', 'member'),
+            ],
+            // check if user is here, then if he is in a organization, and avoid del owner
         ];
     }
 }

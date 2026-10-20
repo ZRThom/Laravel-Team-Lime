@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organization;
+
 use App\Actions\Organization\AddOrganizationMemberAction;
 use App\Actions\Organization\DeleteOrganizationAction;
 use App\Actions\Organization\RemoveOrganizationMemberAction;
@@ -17,6 +19,10 @@ use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class OrganizationController extends Controller
 {
@@ -24,7 +30,7 @@ class OrganizationController extends Controller
 
     public function index(): View
     {
-        $organizations = Organization::all();
+        $organizations = Organization::all(); // modify all (filter by user)
 
         return view('organizations.index', compact('organizations'));
     }
@@ -51,11 +57,17 @@ class OrganizationController extends Controller
         return view('organizations.edit', compact('organization'));
     }
 
-    public function update(UpdateOrganization $request, Organization $organization, UpdateOrganizationAction $action): RedirectResponse
-    {
-        $action->execute($organization, $request->validated());
+    //public function update(UpdateOrganization $request, Organization $organization, UpdateOrganizationAction $action): RedirectResponse
+    //{
+    //    $action->execute($organization, $request->validated());
+    //    return redirect()->route('organizations.edit', $organization)->with('status', 'organization-updated');
+    //}
 
-        return redirect()->route('organizations.edit', $organization)->with('status', 'organization-updated');
+    public function update(UpdateOrganizationRequest $request, Organization $organization)
+    {
+        $data = $request->validated(); // get data
+        $organization->update($data); // upd organization in db
+        return redirect()->route('organizations.index');
     }
 
     public function destroy(DeleteOrganization $request, Organization $organization, DeleteOrganizationAction $action): RedirectResponse
@@ -79,5 +91,26 @@ class OrganizationController extends Controller
         $action->execute($organization, $user->id);
 
         return redirect()->route('organizations.edit', $organization)->with('status', 'member-removed');
+    }
+
+    // (organizationMemberController)
+    // public function destroy(RemoveOrganizationMemberRequest $request, Organization $organisation)
+    // {
+    //     $data = $request->validated();
+    //     $organization->user()->detach($data['user_id']); // get rid of user by organization
+    //     return redirect()->route('organizations.index');
+    // }
+
+    // store
+    public function store(StoreOrganizationRequest $request)
+    {
+        $data = $request->validated(); // get valid data
+        DB::transaction(function () use ($data, $request) { // execute db with data and request
+            $organization = Organization::create(['name' => $data['name'], // create organization in db then generate url slig with rndm suffix
+            'slug' => Str::slug($data['name']) . '-' . Str::lower(Str::random(8)),
+            ]);
+            $organization->users()->attach($request->user()->id,['role' => 'owner']); // create owner for the creator
+        });
+        return redirect()->route('organizations.index'); // redirect to organization list
     }
 }
