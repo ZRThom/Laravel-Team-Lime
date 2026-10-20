@@ -30,7 +30,7 @@ class User extends Authenticatable
         ];
     }
 
-    public function organization()
+    public function organizations()
     {
         return $this->belongsToMany(Organization::class)->withPivot('role', 'joined_at');
         // same as organization.php, also $user->organizations;
