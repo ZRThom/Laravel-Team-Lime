@@ -5,6 +5,7 @@ namespace App\Http\Requests\Organization;
 use App\Models\Organization;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateOrganization extends FormRequest
 {
@@ -24,9 +25,11 @@ class UpdateOrganization extends FormRequest
      */
     public function rules(): array
     {
+        $organization = $this->route('organization');
+
         return [
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:organizations,slug'],
+            'slug' => ['required', 'string', 'max:255', Rule::unique('organizations', 'slug')->ignore($organization)], // ignore current organization
             'plan' => ['required', 'in:free,premium'],
         ];
     }

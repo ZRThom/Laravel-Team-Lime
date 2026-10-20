@@ -1,6 +1,8 @@
 <?php
 
-namespace App\DTOS\Organization;
+namespace App\DTOs\Organization;
+
+use Spatie\LaravelData\Data;
 
 class OrganizationMemberDTOData extends Data
 {

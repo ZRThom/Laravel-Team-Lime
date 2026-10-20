@@ -4,24 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Organization;
 
+use App\Http\Requests\Organization\UpdateOrganization;
+use App\Http\Requests\Organization\StoreOrganization;
 use App\Actions\Organization\AddOrganizationMemberAction;
 use App\Actions\Organization\DeleteOrganizationAction;
 use App\Actions\Organization\RemoveOrganizationMemberAction;
-use App\Actions\Organization\StoreOrganizationAction;
-use App\Actions\Organization\UpdateOrganizationAction;
+
 use App\Http\Requests\Organization\AddOrganizationRequestMember;
 use App\Http\Requests\Organization\DeleteOrganization;
 use App\Http\Requests\Organization\RemoveOrganizationMemberRequest;
-use App\Http\Requests\Organization\StoreOrganization;
-use App\Http\Requests\Organization\UpdateOrganization;
-use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class OrganizationController extends Controller
@@ -40,12 +36,7 @@ class OrganizationController extends Controller
         return view('organizations.create');
     }
 
-    public function store(StoreOrganization $request, StoreOrganizationAction $action): RedirectResponse
-    {
-        $action->execute($request->validated(), $request->user());
 
-        return redirect()->route('organizations.index')->with('status', __('Organization created.'));
-    }
 
     public function edit(Organization $organization): View
     {
@@ -63,7 +54,7 @@ class OrganizationController extends Controller
     //    return redirect()->route('organizations.edit', $organization)->with('status', 'organization-updated');
     //}
 
-    public function update(UpdateOrganizationRequest $request, Organization $organization)
+    public function update(UpdateOrganization $request, Organization $organization)
     {
         $data = $request->validated(); // get data
         $organization->update($data); // upd organization in db
@@ -102,14 +93,15 @@ class OrganizationController extends Controller
     // }
 
     // store
-    public function store(StoreOrganizationRequest $request)
+    public function store(StoreOrganization $request)
     {
         $data = $request->validated(); // get valid data
         DB::transaction(function () use ($data, $request) { // execute db with data and request
-            $organization = Organization::create(['name' => $data['name'], // create organization in db then generate url slig with rndm suffix
-            'slug' => Str::slug($data['name']) . '-' . Str::lower(Str::random(8)),
+            $organization = Organization::create([
+                'name' => $data['name'], // create organization in db then generate url slig with rndm suffix
+                'slug' => Str::slug($data['name']) . '-' . Str::lower(Str::random(8)),
             ]);
-            $organization->users()->attach($request->user()->id,['role' => 'owner']); // create owner for the creator
+            $organization->users()->attach($request->user()->id, ['role' => 'owner']); // create owner for the creator
         });
         return redirect()->route('organizations.index'); // redirect to organization list
     }
