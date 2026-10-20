@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -32,7 +33,10 @@ return new class extends Migration
             $table->index(['city', 'starts_at']);
         });
 
-        DB::statement('ALTER TABLE events ADD CONSTRAINT chk_capacity CHECK (capacity BETWEEN 2 AND 100)');
+        // SQLite ne supporte pas ADD CONSTRAINT : la capacité y est contrôlée par l'application.
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE events ADD CONSTRAINT chk_capacity CHECK (capacity BETWEEN 2 AND 100)');
+        }
     }
 
     /**
