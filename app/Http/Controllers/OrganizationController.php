@@ -9,6 +9,7 @@ use App\Http\Requests\Organization\StoreOrganization;
 use App\Actions\Organization\AddOrganizationMemberAction;
 use App\Actions\Organization\DeleteOrganizationAction;
 use App\Actions\Organization\RemoveOrganizationMemberAction;
+use App\Actions\Organization\StoreOrganizationAction;
 
 use App\Http\Requests\Organization\AddOrganizationRequestMember;
 use App\Http\Requests\Organization\DeleteOrganization;
@@ -17,8 +18,6 @@ use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class OrganizationController extends Controller
 {
@@ -35,8 +34,6 @@ class OrganizationController extends Controller
     {
         return view('organizations.create');
     }
-
-
 
     public function edit(Organization $organization): View
     {
@@ -93,17 +90,11 @@ class OrganizationController extends Controller
     // }
 
     // store
-    public function store(StoreOrganization $request)
+    public function store(StoreOrganization $request, StoreOrganizationAction $action): RedirectResponse
     {
-        $data = $request->validated(); // get valid data
-        DB::transaction(function () use ($data, $request) { // execute db with data and request
-            $organization = Organization::create([
-                'name' => $data['name'], // create organization in db with name, slug and plan from the form
-                'slug' => $data['slug'],
-                'plan' => $data['plan'],
-            ]);
-            $organization->users()->attach($request->user()->id, ['role' => 'owner']); // create owner for the creator
-        });
-        return redirect()->route('organizations.index'); // redirect to organization list
+        // create organization with name, slug and plan from the form, creator becomes owner
+        $action->execute($request->validated(), $request->user());
+
+        return redirect()->route('organizations.index')->with('status', __('Organization created.'));
     }
 }
