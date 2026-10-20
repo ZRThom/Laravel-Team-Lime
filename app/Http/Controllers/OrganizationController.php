@@ -98,8 +98,9 @@ class OrganizationController extends Controller
         $data = $request->validated(); // get valid data
         DB::transaction(function () use ($data, $request) { // execute db with data and request
             $organization = Organization::create([
-                'name' => $data['name'], // create organization in db then generate url slig with rndm suffix
-                'slug' => Str::slug($data['name']) . '-' . Str::lower(Str::random(8)),
+                'name' => $data['name'], // create organization in db with name, slug and plan from the form
+                'slug' => $data['slug'],
+                'plan' => $data['plan'],
             ]);
             $organization->users()->attach($request->user()->id, ['role' => 'owner']); // create owner for the creator
         });
