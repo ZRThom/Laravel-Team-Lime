@@ -15,7 +15,6 @@ class UpdateOrganization extends FormRequest
     {
         $organization = $this->route('organization'); // get by url with route model binding
         return $organization instanceof Organization && ($this->user()?->can('update', $organization) ?? false);
-        // get user then avoir error with ?-> if no user connected, then check perm, and if null, false
     }
 
     /**
@@ -27,6 +26,8 @@ class UpdateOrganization extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'slug' => ['required', 'string', 'max:255', 'unique:organizations,slug'],
+            'plan' => ['required', 'in:free,premium'],
         ];
     }
 }

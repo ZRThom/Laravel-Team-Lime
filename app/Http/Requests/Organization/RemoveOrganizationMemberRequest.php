@@ -5,6 +5,7 @@ namespace App\Http\Requests\Organization;
 use App\Models\Organization;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class RemoveOrganizationMemberRequest extends FormRequest
 {
@@ -15,7 +16,7 @@ class RemoveOrganizationMemberRequest extends FormRequest
     {
         $organization = $this->route('organization'); // catch organization in url when route model bind
         // check if organization owner is link with user id, then valid request
-        return $organization instanceof Organization && this->user() !== null && $organization->users()->where('user.id', $this->user()->id)->wherePivot('role', 'owner')->exists();
+        return $organization instanceof Organization && $this->user() !== null && $organization->users()->where('users.id', $this->user()->id)->wherePivot('role', 'owner')->exists();
     }
 
     /**
@@ -33,4 +34,11 @@ class RemoveOrganizationMemberRequest extends FormRequest
             // check if user is here, then if he is in a organization, and avoid del owner
         ];
     }
+    //give the id to modify the form request, if not, get the id in url with route model binding
+    protected function prepareForValidation(): void
+    {
+    $this->merge([
+        'user_id' => $this->route('user')?->id ?? $this->route('user'),
+    ]);
+}
 }

@@ -14,8 +14,6 @@ class AddOrganizationMemberAction
      */
     public function execute(Organization $organization, User $member): User
     {
-        // Implementation of adding aa member to the organization goes here.
-        // This could involve checking permissions, validating input, and updating the database.
         $organization->members()->syncWithoutDetaching([$member->id]);
 
         return $member;

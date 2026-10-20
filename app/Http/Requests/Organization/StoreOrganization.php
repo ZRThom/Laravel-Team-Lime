@@ -22,8 +22,10 @@ class StoreOrganization extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'name' => ['require', 'string', 'max=255'], // name is required, with a string and max character = 255
-        ];
+    return [
+        'name' => ['required', 'string', 'max:255'],
+        'slug' => ['required', 'string', 'max:255', 'unique:organizations,slug'],
+        'plan' => ['required', 'in:free,premium'],
+    ];
     }
-}
+}    

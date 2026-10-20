@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Organization extends Model
 {
@@ -15,10 +16,17 @@ class Organization extends Model
         'plan',
     ];
 
-    public function users()
+    public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class)->withPivot('role', 'joined_at');
-        // belongsToMany = organization that can have multiple user and inverse
-        // withPivot = get role and joined_at
+    return $this->belongsToMany(User::class, 'organization_user')
+        ->withPivot('role', 'joined_at')
+        ->withTimestamps();
+
+    }    
+    public function members(): BelongsToMany
+    {
+        return $this->users();
     }
+    
 }
+

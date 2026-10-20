@@ -4,6 +4,7 @@ namespace App\Http\Requests\Organization;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Organization;
 
 class AddOrganizationRequestMember extends FormRequest
 {
@@ -13,8 +14,7 @@ class AddOrganizationRequestMember extends FormRequest
     public function authorize(): bool
     {
         $organization = $this->route('organization'); // catch organization in url when route model bind
-        // check if organization owner is link with user id, then valid request
-        return $organization instanceof Organization && this->user() !== null && $organization->users()->where('user.id', $this->user()->id)->wherePivot('role', 'owner')->exists();
+        return $organization instanceof Organization && $this->user() !== null && $organization->users()->where('users.id', $this->user()->id)->wherePivot('role', 'owner')->exists();
     }
 
     /**
@@ -25,7 +25,7 @@ class AddOrganizationRequestMember extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'integer', 'exists:user_id'], // assign user, assign integer (value), ID have to exist in user table (id)
+            'user_id' => ['required', 'integer', 'exists:users,id'],// assign user, assign integer (value), ID have to exist in user table (id)
         ];
     }
 }
