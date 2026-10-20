@@ -14,4 +14,11 @@ class Organization extends Model
         'slug', // depend
         'plan',
     ];
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class)->withPivot('role', 'joined_at');
+        // belongsToMany = organization that can have multiple user and inverse
+        // withPivot = get role and joined_at
+    }
 }

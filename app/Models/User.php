@@ -29,4 +29,10 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function organization()
+    {
+        return $this->belongsToMany(Organization::class)->withPivot('role', 'joined_at');
+        // same as organization.php, also $user->organizations;
+    }
 }
