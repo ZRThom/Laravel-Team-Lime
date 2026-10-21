@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Event;
 
+use App\Models\Event;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -12,7 +13,9 @@ class CancelEventRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        $event = $this->route('event'); // get by url with route model binding
+
+        return $event instanceof Event && ($this->user()?->can('cancel', $event) ?? false);
     }
 
     /**
@@ -22,8 +25,6 @@ class CancelEventRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 }

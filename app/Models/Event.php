@@ -32,9 +32,19 @@ class Event extends Model
             ->withPivot('status', 'registered_at');
     }
 
+    protected function casts(): array
+    {
+        return ['starts_at' => 'datetime'];
+    }
+
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    public function sport(): BelongsTo
+    {
+        return $this->belongsTo(Sport::class);
     }
 
     public function isOwnedBy(User $user): bool
