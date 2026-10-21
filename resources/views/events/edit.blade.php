@@ -88,6 +88,22 @@
                 </div>
             </div>
 
+            {{-- US 6 extra: public link of the event, to share it (start) --}}
+            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
+                <div class="max-w-xl">
+                    <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                        {{ __('Public link') }}
+                    </h2>
+
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        {{ __('Share this link, no account is needed to view the event.') }}
+                    </p>
+
+                    <x-text-input type="text" readonly class="mt-2 block w-full" :value="route('events.public', $event->public_token)" onclick="this.select()" />
+                </div>
+            </div>
+            {{-- US 6 extra: public link of the event (end) --}}
+
             @if ($event->status !== 'cancelled')
                 <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
                     <div class="max-w-xl">
