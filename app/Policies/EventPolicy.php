@@ -2,15 +2,23 @@
 
 namespace App\Policies;
 
+use App\Models\Event;
 use App\Models\User;
 
 class EventPolicy
 {
-    /**
-     * Create a new policy instance.
-     */
-    public function __construct()
+    public function before(User $user, string $ability): ?bool
     {
-        //
+        return $user->is_admin ? true : null;
+    }
+
+    public function update(User $user, Event $event): bool
+    {
+        return $event->isOwnedBy($user);
+    }
+
+    public function cancel(User $user, Event $event): bool
+    {
+        return $event->isOwnedBy($user);
     }
 }
