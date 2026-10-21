@@ -21,6 +21,24 @@ class EventController extends Controller
 {
     use AuthorizesRequests;
 
+    public function index(Request $request): View
+    {
+        $filters = $request->only(['sport_id', 'city', 'date']);
+
+        // upcoming events only, sorted by date, filters are kept in the pagination links
+        $events = Event::upcoming()
+            ->filter($filters)
+            ->withConfirmedCount()
+            ->with(['sport', 'organization'])
+            ->orderBy('starts_at')
+            ->paginate(12)
+            ->withQueryString();
+
+        $sports = Sport::where('active', true)->orderBy('name')->get();
+
+        return view('events.index', compact('events', 'sports', 'filters'));
+    }
+
     public function create(Request $request): View
     {
         // If User can't create an event => Error 403
