@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Event\CancelEventAction;
 use App\Actions\Event\StoreEventAction;
 use App\Actions\Event\UpdateEventAction;
+use App\DTOs\Event\EventDTO;
 use App\Http\Requests\Event\CancelEventRequest;
 use App\Http\Requests\Event\StoreEventRequest;
 use App\Http\Requests\Event\UpdateEventRequest;
@@ -39,7 +40,7 @@ class EventController extends Controller
 
     public function store(StoreEventRequest $request, StoreEventAction $action): RedirectResponse
     {
-        $event = $action->execute($request->validated(), $request->user());
+        $event = $action->execute(EventDTO::from($request->validated()), $request->user());
 
         return redirect()->route('events.edit', $event)->with('status', __('Event created.'));
     }
@@ -56,7 +57,7 @@ class EventController extends Controller
 
     public function update(UpdateEventRequest $request, Event $event, UpdateEventAction $action): RedirectResponse
     {
-        $action->execute($event, $request->validated()); // event added with valid action
+        $action->execute($event, EventDTO::from($request->validated())); // event added with valid action
 
         return redirect()->route('events.edit', $event)->with('status', __('Event updated.'));
     }
