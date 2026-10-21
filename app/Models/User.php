@@ -31,7 +31,13 @@ class User extends Authenticatable
         ];
     }
 
-    public function organizations(): BelongsToMany 
+    // events the user registered to (with the registration status)
+    public function events(): BelongsToMany
+    {
+        return $this->belongsToMany(Event::class, 'event_participants')->withPivot('status', 'registered_at');
+    }
+
+    public function organizations(): BelongsToMany
     {
         return $this->belongsToMany(Organization::class)->withPivot('role', 'joined_at');
         // same as organization.php, also $user->organizations;

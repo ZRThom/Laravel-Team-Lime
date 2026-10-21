@@ -25,6 +25,12 @@
                     <p>{{ __('Capacity') }} : {{ $event->capacity }}</p>
                     <p>{{ __('Seats left') }} : {{ $event->remainingSeats() }}</p>
 
+                    {{-- US 7: messages of the registration --}}
+                    @if (session('status'))
+                        <p class="text-sm text-green-600 dark:text-green-400">{{ session('status') }}</p>
+                    @endif
+                    <x-input-error :messages="$errors->get('registration')" />
+
                     @include('events.partials.registration-button')
                 </div>
             </div>

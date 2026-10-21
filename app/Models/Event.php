@@ -78,6 +78,12 @@ class Event extends Model
         return $this->capacity - $confirmed;
     }
 
+    // true if the user has a confirmed registration
+    public function isRegisteredBy(User $user): bool
+    {
+        return $this->participants()->where('users.id', $user->id)->wherePivot('status', 'confirmed')->exists();
+    }
+
     public function isOwnedBy(User $user): bool
     {
         return $this->organization->users()->where('users.id', $user->id)->wherePivot('role', 'owner')->exists();

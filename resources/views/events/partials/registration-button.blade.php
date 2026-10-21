@@ -1,11 +1,18 @@
 @if ($event->starts_at->isPast())
     {{-- event already started: no button --}}
+@elseif (auth()->check() && $event->isRegisteredBy(auth()->user()))
+    <form method="post" action="{{ route('events.registration.destroy', $event) }}">
+        @csrf
+        @method('delete')
+        <x-danger-button>{{ __('Cancel my registration') }}</x-danger-button>
+    </form>
 @elseif ($event->remainingSeats() <= 0)
     <p class="font-semibold">{{ __('Full') }}</p>
 @elseif (auth()->check())
-    {{-- registration is not available yet --}}
-    <x-primary-button disabled class="opacity-50">{{ __('Participate') }}</x-primary-button>
-    <p class="text-sm text-gray-500">{{ __('Registration coming soon.') }}</p>
+    <form method="post" action="{{ route('events.registration.store', $event) }}">
+        @csrf
+        <x-primary-button>{{ __('Participate') }}</x-primary-button>
+    </form>
 @else
     <p>{{ __('To participate, please log in or create an account.') }}</p>
     <div class="flex items-center gap-4">
