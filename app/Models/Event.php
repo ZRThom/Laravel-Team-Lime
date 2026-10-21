@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Event extends Model
 {
@@ -23,4 +24,10 @@ class Event extends Model
         'public_token',
         'status',
     ];
+
+    public function participants(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'event_participants')
+            ->withPivot('status', 'registered_at');
+    }
 }
