@@ -3,9 +3,12 @@
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicEventController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [EventController::class, 'index'])->name('events.index');
+
+Route::get('/e/{token}', [PublicEventController::class, 'show'])->name('events.public');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
