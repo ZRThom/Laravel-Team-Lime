@@ -17,6 +17,7 @@ use App\Http\Requests\Organization\RemoveOrganizationMemberRequest;
 use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class OrganizationController extends Controller
@@ -79,6 +80,16 @@ class OrganizationController extends Controller
         $action->execute($organization, $user->id);
 
         return redirect()->route('organizations.edit', $organization)->with('status', 'member-removed');
+    }
+
+    public function switch(Request $request, Organization $organization): RedirectResponse
+    {
+        // only a member can pick this organization as active
+        abort_unless($request->user()->organizations()->whereKey($organization->id)->exists(), 403);
+
+        session(['organization_id' => $organization->id]);
+
+        return back();
     }
 
     // (organizationMemberController)

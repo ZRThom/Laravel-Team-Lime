@@ -21,6 +21,30 @@
                 </div>
             </div>
 
+            <!-- Active organization -->
+            @if ($userOrganizations->isNotEmpty())
+                <div class="hidden sm:flex sm:items-center sm:ms-auto">
+                    <x-dropdown align="right" width="48">
+                        <x-slot name="trigger">
+                            <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
+                                <div>{{ $activeOrganization->name }}</div>
+                            </button>
+                        </x-slot>
+
+                        <x-slot name="content">
+                            @foreach ($userOrganizations as $organization)
+                                <form method="POST" action="{{ route('organizations.switch', $organization) }}">
+                                    @csrf
+                                    <x-dropdown-link href="#" onclick="event.preventDefault(); this.closest('form').submit();">
+                                        {{ $organization->name }}{{ $organization->id === $activeOrganization->id ? ' ✓' : '' }}
+                                    </x-dropdown-link>
+                                </form>
+                            @endforeach
+                        </x-slot>
+                    </x-dropdown>
+                </div>
+            @endif
+
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="48">
