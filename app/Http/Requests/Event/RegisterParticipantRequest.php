@@ -11,7 +11,8 @@ class RegisterParticipantRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user() !== null; // user must be connected
+        // any connected user can participate
+        return $this->user()?->can('registration.create', $this->route('event')) ?? false;
     }
 
     public function rules(): array

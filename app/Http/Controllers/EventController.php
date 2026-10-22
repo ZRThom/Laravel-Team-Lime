@@ -23,6 +23,8 @@ class EventController extends Controller
 
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Event::class); // public list, visitors included
+
         $filters = $request->only(['sport_id', 'city', 'date']);
 
         // upcoming events only, sorted by date, filters are kept in the pagination links

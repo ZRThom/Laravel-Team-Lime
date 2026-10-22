@@ -20,7 +20,7 @@ class RegistrationController extends Controller
     public function index(Event $event): View
     {
         // If User is not owner => Error 403
-        $this->authorize('viewParticipants', $event);
+        $this->authorize('registration.viewAny', $event);
 
         $participants = $event->participants()->wherePivot('status', 'confirmed')->orderByPivot('registered_at')->get();
 
@@ -37,7 +37,9 @@ class RegistrationController extends Controller
 
     public function destroy(Request $request, Event $event, CancelRegistrationAction $action): RedirectResponse
     {
-        // only the connected user's own registration can be cancelled
+        // only the connected user's own registration can be cancelled, else Error 403
+        $this->authorize('registration.cancel', $event);
+
         $action->execute(new RegistrationDTO($event->id, $request->user()->id));
 
         return redirect()->route('events.public', $event->public_token)->with('status', __('Your registration is cancelled.'));

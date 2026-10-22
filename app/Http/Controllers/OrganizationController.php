@@ -24,15 +24,21 @@ class OrganizationController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $organizations = Organization::all(); // modify all (filter by user)
+        $this->authorize('viewAny', Organization::class);
+
+        // an admin sees every organization, the others only their own
+        $user = $request->user();
+        $organizations = $user->is_admin ? Organization::all() : $user->organizations()->get();
 
         return view('organizations.index', compact('organizations'));
     }
 
     public function create(): View
     {
+        $this->authorize('create', Organization::class);
+
         return view('organizations.create');
     }
 
@@ -82,10 +88,10 @@ class OrganizationController extends Controller
         return redirect()->route('organizations.edit', $organization)->with('status', 'member-removed');
     }
 
-    public function switch(Request $request, Organization $organization): RedirectResponse
+    public function switch(Organization $organization): RedirectResponse
     {
         // only a member can pick this organization as active
-        abort_unless($request->user()->organizations()->whereKey($organization->id)->exists(), 403);
+        $this->authorize('view', $organization);
 
         session(['organization_id' => $organization->id]);
 
