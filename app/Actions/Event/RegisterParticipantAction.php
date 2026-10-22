@@ -3,7 +3,9 @@
 namespace App\Actions\Event;
 
 use App\DTOs\Event\RegistrationDTO;
+use App\Events\ParticipantRegistered;
 use App\Models\Event;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -12,7 +14,7 @@ class RegisterParticipantAction
     public function execute(RegistrationDTO $dto): void
     {
         // capacity check and insert in one transaction, the event row is locked meanwhile
-        DB::transaction(function () use ($dto) {
+        $event = DB::transaction(function () use ($dto) {
             $event = Event::lockForUpdate()->findOrFail($dto->event_id);
 
             if ($event->status !== 'published' || $event->starts_at->isPast()) {
@@ -38,7 +40,12 @@ class RegisterParticipantAction
             } else {
                 $event->participants()->attach($dto->user_id, $line);
             }
+
+            return $event;
         });
+
+        // fired once, after the transaction: a refused or rolled back registration never sends mails
+        ParticipantRegistered::dispatch($event, User::findOrFail($dto->user_id));
     }
 
     private function fail(string $message): never

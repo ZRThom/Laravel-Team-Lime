@@ -3,7 +3,9 @@
 namespace App\Actions\Event;
 
 use App\DTOs\Event\RegistrationDTO;
+use App\Events\RegistrationCancelled;
 use App\Models\Event;
+use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
 class CancelRegistrationAction
@@ -27,6 +29,8 @@ class CancelRegistrationAction
 
         // the line is kept, only the status changes
         $event->participants()->updateExistingPivot($dto->user_id, ['status' => 'cancelled']);
+
+        RegistrationCancelled::dispatch($event, User::findOrFail($dto->user_id));
     }
 
     private function fail(string $message): never
