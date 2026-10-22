@@ -4,9 +4,11 @@ namespace Tests\Unit\event;
 
 use App\Actions\Event\CancelRegistrationAction;
 use App\DTOs\Event\RegistrationDTO;
+use App\Events\RegistrationCancelled;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event as EventFacade;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -39,6 +41,34 @@ class CancelRegistrationActionTest extends TestCase
 
         $this->assertDatabaseCount('event_participants', 1);
         $this->assertDatabaseHas('event_participants', ['user_id' => $user->id, 'status' => 'cancelled']);
+    }
+
+    public function test_registration_cancelled_is_fired_after_a_cancellation(): void
+    {
+        EventFacade::fake([RegistrationCancelled::class]);
+        $event = Event::factory()->create(['starts_at' => now()->addDay()]);
+        $user = User::factory()->create();
+        $event->participants()->attach($user->id, ['status' => 'confirmed']);
+
+        $this->cancel($event, $user);
+
+        EventFacade::assertDispatchedTimes(RegistrationCancelled::class, 1);
+        EventFacade::assertDispatched(RegistrationCancelled::class, fn ($fired) => $fired->event->is($event) && $fired->participant->is($user));
+    }
+
+    public function test_registration_cancelled_is_not_fired_when_the_cancellation_is_refused(): void
+    {
+        EventFacade::fake([RegistrationCancelled::class]);
+        $event = Event::factory()->create(['starts_at' => now()->addDay()]);
+        $user = User::factory()->create();
+
+        try {
+            $this->cancel($event, $user);
+        } catch (ValidationException) {
+            // expected: no registration
+        }
+
+        EventFacade::assertNotDispatched(RegistrationCancelled::class);
     }
 
     public function test_it_only_cancels_the_registration_of_the_given_user(): void

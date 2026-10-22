@@ -2,9 +2,13 @@
 
 namespace Tests\Feature\event;
 
+use App\Mail\OwnerRegistrationNoticeMail;
+use App\Mail\ParticipantRegistrationMail;
+use App\Mail\RegistrationCancelledMail;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class RegistrationControllerTest extends TestCase
@@ -31,6 +35,58 @@ class RegistrationControllerTest extends TestCase
         $this->assertDatabaseHas('event_participants', ['event_id' => $event->id, 'user_id' => $user->id, 'status' => 'confirmed']);
         $this->actingAs($user)->get('/e/'.$event->public_token)
             ->assertSee('You are registered.')->assertSee('Cancel my registration')->assertSeeInOrder(['Seats left', '2']);
+    }
+
+    public function test_registering_queues_the_confirmation_and_the_owner_notice(): void
+    {
+        Mail::fake();
+        $event = Event::factory()->create(['starts_at' => now()->addDay()]);
+        $owner = User::factory()->create();
+        $event->organization->users()->attach($owner->id, ['role' => 'owner']);
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post("/events/{$event->id}/registration")->assertSessionHasNoErrors();
+
+        Mail::assertQueued(ParticipantRegistrationMail::class, fn ($mail) => $mail->hasTo($user->email));
+        Mail::assertQueued(OwnerRegistrationNoticeMail::class, fn ($mail) => $mail->hasTo($owner->email));
+        Mail::assertQueuedCount(2);
+        Mail::assertNothingSent(); // nothing goes through the mail transport during the request
+    }
+
+    public function test_the_emails_wait_in_the_queue_and_the_registration_is_kept(): void
+    {
+        config(['queue.default' => 'database']);
+        $event = Event::factory()->create(['starts_at' => now()->addDay()]);
+        $event->organization->users()->attach(User::factory()->create()->id, ['role' => 'owner']);
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post("/events/{$event->id}/registration")->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('event_participants', ['user_id' => $user->id, 'status' => 'confirmed']);
+        $this->assertDatabaseCount('jobs', 2); // sent later by "php artisan queue:work"
+    }
+
+    public function test_a_refused_registration_sends_no_email(): void
+    {
+        Mail::fake();
+        $event = Event::factory()->create(['starts_at' => now()->subHour()]);
+
+        $this->actingAs(User::factory()->create())->post("/events/{$event->id}/registration")->assertSessionHasErrors('registration');
+
+        Mail::assertNothingQueued();
+    }
+
+    public function test_cancelling_queues_a_cancellation_email(): void
+    {
+        Mail::fake();
+        $event = Event::factory()->create(['starts_at' => now()->addDay()]);
+        $user = User::factory()->create();
+        $event->participants()->attach($user->id, ['status' => 'confirmed']);
+
+        $this->actingAs($user)->delete("/events/{$event->id}/registration")->assertSessionHasNoErrors();
+
+        Mail::assertQueued(RegistrationCancelledMail::class, fn ($mail) => $mail->hasTo($user->email));
+        Mail::assertQueuedCount(1);
     }
 
     public function test_a_second_registration_returns_an_explicit_message_without_duplicate(): void

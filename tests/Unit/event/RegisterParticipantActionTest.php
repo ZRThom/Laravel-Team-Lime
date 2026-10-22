@@ -4,10 +4,12 @@ namespace Tests\Unit\event;
 
 use App\Actions\Event\RegisterParticipantAction;
 use App\DTOs\Event\RegistrationDTO;
+use App\Events\ParticipantRegistered;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event as EventFacade;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -89,6 +91,39 @@ class RegisterParticipantActionTest extends TestCase
         }
 
         $this->assertDatabaseCount('event_participants', 0);
+    }
+
+    public function test_participant_registered_is_fired_once_after_a_confirmed_registration(): void
+    {
+        EventFacade::fake([ParticipantRegistered::class]);
+        $event = Event::factory()->create(['starts_at' => now()->addDay()]);
+        $user = User::factory()->create();
+
+        $this->register($event, $user);
+
+        EventFacade::assertDispatchedTimes(ParticipantRegistered::class, 1);
+        EventFacade::assertDispatched(ParticipantRegistered::class, fn ($fired) => $fired->event->is($event) && $fired->participant->is($user));
+    }
+
+    public function test_participant_registered_is_not_fired_when_the_registration_is_refused(): void
+    {
+        EventFacade::fake([ParticipantRegistered::class]);
+        $user = User::factory()->create();
+        $full = Event::factory()->create(['capacity' => 2, 'starts_at' => now()->addDay()]);
+        $full->participants()->attach(User::factory()->count(2)->create()->pluck('id'), ['status' => 'confirmed']);
+        $registered = Event::factory()->create(['starts_at' => now()->addDay()]);
+        $registered->participants()->attach($user->id, ['status' => 'confirmed']);
+        $closed = Event::factory()->create(['starts_at' => now()->subHour()]);
+
+        foreach ([$full, $registered, $closed] as $event) {
+            try {
+                $this->register($event, $user);
+            } catch (ValidationException) {
+                // expected
+            }
+        }
+
+        EventFacade::assertNotDispatched(ParticipantRegistered::class);
     }
 
     public function test_a_new_registration_after_a_cancellation_reactivates_the_same_line(): void
