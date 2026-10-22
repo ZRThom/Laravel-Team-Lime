@@ -4,39 +4,44 @@ namespace App\Policies;
 
 use App\Models\Organization;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
 
 class OrganizationPolicy
 {
-    // IsOwner method => rename in the future
+    // an admin can do everything
     public function before(User $user, string $ability): ?bool
     {
         if ($user->is_admin) {
             return true;
         }
 
-        return null; 
+        return null;
     }
 
+    // the list is filtered by the controller (only my organizations)
+    public function viewAny(User $user): bool
+    {
+        return true;
+    }
+
+    // a member or an owner of the organization can see it
+    public function view(User $user, Organization $organization): bool
+    {
+        return $user->roleIn($organization) !== null;
+    }
+
+    // any connected user can create an organization (and becomes its owner)
+    public function create(User $user): bool
+    {
+        return true;
+    }
 
     public function update(User $user, Organization $organization): bool
     {
-        return $this->isOwner($user, $organization);
+        return $user->roleIn($organization) === 'owner';
     }
 
- 
     public function delete(User $user, Organization $organization): bool
     {
-        return $this->isOwner($user, $organization);
-    }
-
-
-    private function isOwner(User $user, Organization $organization): bool
-    {
-        return DB::table('organization_user')
-            ->where('organization_id', $organization->id)
-            ->where('user_id', $user->id)
-            ->where('role', 'owner')
-            ->exists();
+        return $user->roleIn($organization) === 'owner';
     }
 }

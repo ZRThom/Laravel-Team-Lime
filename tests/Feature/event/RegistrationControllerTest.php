@@ -93,8 +93,7 @@ class RegistrationControllerTest extends TestCase
         [$participant, $stranger] = User::factory()->count(2)->create()->all();
         $event->participants()->attach($participant->id, ['status' => 'confirmed']);
 
-        $this->actingAs($stranger)->delete("/events/{$event->id}/registration")
-            ->assertSessionHasErrors('registration');
+        $this->actingAs($stranger)->delete("/events/{$event->id}/registration")->assertForbidden();
 
         $this->assertDatabaseHas('event_participants', ['user_id' => $participant->id, 'status' => 'confirmed']);
     }

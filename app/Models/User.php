@@ -28,7 +28,14 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean', // platform admin, the other roles are per organization
         ];
+    }
+
+    // role of the user in an organization ('owner', 'member') or null if he is not in it
+    public function roleIn(Organization $organization): ?string
+    {
+        return $this->organizations()->whereKey($organization->id)->first()?->pivot->role;
     }
 
     // events the user registered to (with the registration status)
