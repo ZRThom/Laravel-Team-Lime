@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\ProfileController;
@@ -11,9 +12,7 @@ Route::get('/', [EventController::class, 'index'])->name('events.index');
 
 Route::get('/e/{token}', [PublicEventController::class, 'show'])->name('events.public');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -23,6 +22,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('organizations', OrganizationController::class)->except(['show']);
     Route::resource('events', EventController::class)->only(['create', 'store', 'edit', 'update']);
     Route::patch('/events/{event}/cancel', [EventController::class, 'cancel'])->name('events.cancel');
+
+    Route::get('/events/{event}/manage', [EventController::class, 'manage'])->name('events.manage');
+    Route::get('/events/{event}/participants', [RegistrationController::class, 'index'])->name('events.participants');
 
     Route::post('/events/{event}/registration', [RegistrationController::class, 'store'])->name('events.registration.store');
     Route::delete('/events/{event}/registration', [RegistrationController::class, 'destroy'])->name('events.registration.destroy');

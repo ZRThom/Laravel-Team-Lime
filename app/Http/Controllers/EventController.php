@@ -80,6 +80,17 @@ class EventController extends Controller
         return redirect()->route('events.edit', $event)->with('status', __('Event updated.'));
     }
 
+    // management screen of one event (info, public link, actions)
+    public function manage(Event $event): View
+    {
+        // If User is not owner => Error 403
+        $this->authorize('update', $event);
+
+        $event->load(['sport', 'organization'])->loadCount(['participants as confirmed_count' => fn ($query) => $query->where('event_participants.status', 'confirmed')]);
+
+        return view('events.manage', compact('event'));
+    }
+
     public function cancel(CancelEventRequest $request, Event $event, CancelEventAction $action): RedirectResponse
     {
         $action->execute($event);

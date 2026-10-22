@@ -27,4 +27,10 @@ class EventPolicy
     {
         return $event->isOwnedBy($user);
     }
+
+    // list of the participants of an event
+    public function viewParticipants(User $user, Event $event): bool
+    {
+        return $event->isOwnedBy($user);
+    }
 }
