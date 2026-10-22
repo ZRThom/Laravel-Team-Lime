@@ -15,8 +15,8 @@ class RemoveOrganizationMemberRequest extends FormRequest
     public function authorize(): bool
     {
         $organization = $this->route('organization'); // catch organization in url when route model bind
-        // check if organization owner is link with user id, then valid request
-        return $organization instanceof Organization && $this->user() !== null && $organization->users()->where('users.id', $this->user()->id)->wherePivot('role', 'owner')->exists();
+
+        return $organization instanceof Organization && ($this->user()?->can('update', $organization) ?? false);
     }
 
     /**
